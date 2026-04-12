@@ -47,10 +47,10 @@ SLICE_TIME = 0.2
 REPORT_WIDTH = 98
 
 # Requested publication palette
-PRIMARY = "#003f5c"
-SECONDARY = "#bc5090"
-ACCENT_1 = "#ff6361"
-ACCENT_2 = "#ffa600"
+PRIMARY = "#d00000"
+SECONDARY = "#e9874e"
+ACCENT_1 = "#8fc067"
+ACCENT_2 = "#579d52"
 
 FIG_DIR = Path(__file__).resolve().parent / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -243,7 +243,7 @@ def save_figure_1(
         linewidths=0.0,
     )
 
-    ax.set_title("Figure 1. Sparse noisy sensor measurements across the consolidation domain")
+    ax.set_title("Sparse noisy sensor measurements across the consolidation domain")
     ax.set_xlabel("Time factor, $T_v$")
     ax.set_ylabel("Depth, $z$ (m)")
     ax.set_xlim(0.0, TV_MAX)
@@ -296,7 +296,7 @@ def save_figure_2(
     axes[1].legend()
     axes[1].grid(True, linestyle="--", alpha=0.45)
 
-    fig.suptitle("Figure 2. Training convergence and parameter identification", fontsize=14)
+    fig.suptitle("Training convergence and parameter identification", fontsize=14)
     output_path = FIG_DIR / "figure_2_convergence_and_cv.png"
     fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
@@ -331,7 +331,7 @@ def save_figure_3(
         label="95% confidence interval",
     )
 
-    ax.set_title(f"Figure 3. True, traditional, and PINN+UQ profiles at $T_v = {SLICE_TIME:.1f}$")
+    ax.set_title(f"True, traditional, and PINN+UQ profiles at $T_v = {SLICE_TIME:.1f}$")
     ax.set_xlabel("Excess pore pressure, $u$")
     ax.set_ylabel("Depth, $z$ (m)")
     ax.set_xlim(-0.15, 1.15)
@@ -363,7 +363,7 @@ def save_figure_4(
     ax.contour(t_grid, z_grid, std_grid, levels=levels[::2], colors="white", linewidths=0.4, alpha=0.55)
     ax.scatter(sensor_t, sensor_z, s=14, color="white", edgecolors=PRIMARY, linewidths=0.4, alpha=0.95)
 
-    ax.set_title("Figure 4. Spatiotemporal uncertainty map from MC dropout")
+    ax.set_title("Spatiotemporal uncertainty map from MC dropout")
     ax.set_xlabel("Time factor, $T_v$")
     ax.set_ylabel("Depth, $z$ (m)")
     ax.set_xlim(0.0, TV_MAX)
