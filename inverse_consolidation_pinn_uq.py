@@ -444,6 +444,15 @@ def main() -> None:
     sensor_noise = rng.normal(loc=0.0, scale=NOISE_STD, size=N_SENSORS)
     sensor_u_noisy = sensor_u_clean + sensor_noise
 
+    import csv
+    csv_path = Path(__file__).resolve().parent / "synthetic_sensor_data.csv"
+    with open(csv_path, mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Depth_z", "Time_t", "Clean_u", "Noise", "Noisy_u"])
+        for i in range(len(sensor_z)):
+            writer.writerow([sensor_z[i], sensor_t[i], sensor_u_clean[i], sensor_noise[i], sensor_u_noisy[i]])
+    print(f"Saved synthetic sensor data to {csv_path}")
+
     sensor_inputs = torch.tensor(
         np.column_stack([sensor_z, sensor_t]), dtype=torch.float32, device=DEVICE
     )
