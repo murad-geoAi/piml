@@ -26,18 +26,18 @@ For this reason, uncertainty quantification (UQ) is not optional. Foundation set
 
 The governing physics is Terzaghi's one-dimensional consolidation equation [1]:
 
-\begin{equation}
+\[
 \frac{\partial u(z,t)}{\partial t} = c_v \frac{\partial^2 u(z,t)}{\partial z^2},
 \qquad 0 < z < H,\; 0 < t \le T_v^{\max},
-\end{equation}
+\]
 
-where \(u(z,t)\) is excess pore pressure, \(z\) is depth, \(t\) is time, and \(c_v\) is the coefficient of consolidation to be inferred. In the present study, the depth domain was fixed at \(H = 2.0\) m, the dimensionless time-factor range was \(0 \le T_v \le 1.0\), and the initial excess pore pressure amplitude was \(u_0 = 1.0\). The synthetic reference field was generated from the analytical series solution for a double-drainage-type setting with zero excess pore pressure at the drainage boundaries:
+where \(u(z,t)\) is excess pore pressure, \(z\) is depth, \(t\) is the normalized time coordinate reported as \(T_v\) in the figures, and \(c_v\) is the coefficient of consolidation to be inferred. In the present study, the depth domain was fixed at \(H = 2.0\) m, the dimensionless time-factor range was \(0 \le T_v \le 1.0\), and the initial excess pore pressure amplitude was \(u_0 = 1.0\). The synthetic reference field was generated from the analytical series solution for a double-drainage-type setting with zero excess pore pressure at the drainage boundaries:
 
-\begin{equation}
+\[
 u(0,t) = u(H,t) = 0,
 \qquad
 u(z,0) = u_0.
-\end{equation}
+\]
 
 The analytical truth used throughout the study adopted \(c_{v,\mathrm{true}} = 1.2\).
 
@@ -47,7 +47,7 @@ To emulate realistic instrumentation constraints, the dense analytical field was
 
 This produced a deliberately difficult inverse-learning setting: limited observations, irregular sampling, and corrupted targets. The actual realized sensor perturbations shown in Figure 1 had an empirical mean of \(+0.003\) and a standard deviation of \(0.047\), which closely matches the intended field-noise level.
 
-![Figure 1. Sparse noisy spatiotemporal sensor map used for inverse training. Bubble size is proportional to the magnitude of the observed excess pore pressure, highlighting both data sparsity and heteroscedastic-looking measurement structure.](figures/figure_1_sparse_sensor_map.png)
+![Figure 1. Sparse spatiotemporal sensor observations used for inverse training. Color encodes observed excess pore pressure \(u_i^{\mathrm{noisy}}\), while bubble area scales with \(|u_i^{\mathrm{noisy}}|\), making the limited and irregular data support explicit.](figures/figure_1_sparse_sensor_map.png)
 
 ### 2.3 Uncertainty-aware PINN architecture
 
@@ -57,9 +57,9 @@ Unlike a conventional regressor, the coefficient of consolidation was not prescr
 
 Monte Carlo dropout was retained during inference rather than being disabled after training. Specifically, 1,000 stochastic forward passes were executed to form an empirical predictive distribution at each evaluation point. The predictive mean was taken as the final field estimate, while the pointwise standard deviation \(\sigma_u\) was used to construct approximate 95% confidence bounds:
 
-\begin{equation}
+\[
 \hat{u}_{\mathrm{mean}}(z,t) \pm 2 \sigma_u(z,t).
-\end{equation}
+\]
 
 This design converts a deterministic PINN into a stochastic inference engine capable of indicating where the model is well constrained and where caution is warranted.
 
@@ -67,34 +67,34 @@ This design converts a deterministic PINN into a stochastic inference engine cap
 
 The network was trained by minimizing a composite objective made of a data-misfit term and a physics-residual term:
 
-\begin{equation}
+\[
 \mathcal{L} = \mathcal{L}_{\mathrm{data}} + \mathcal{L}_{\mathrm{physics}}.
-\end{equation}
+\]
 
 The data component was the mean squared error between predictions and the 50 noisy sensor values:
 
-\begin{equation}
+\[
 \mathcal{L}_{\mathrm{data}} =
 \frac{1}{N_s}\sum_{i=1}^{N_s}
 \left[
 \hat{u}_\theta(z_i,t_i) - u_i^{\mathrm{noisy}}
 \right]^2.
-\end{equation}
+\]
 
 The physics term enforced consistency with the governing PDE through the residual
 
-\begin{equation}
+\[
 r_\theta(z,t) =
 \frac{\partial \hat{u}_\theta}{\partial t}
 - c_v \frac{\partial^2 \hat{u}_\theta}{\partial z^2},
-\end{equation}
+\]
 
 evaluated at 2,000 randomly sampled interior collocation points per epoch:
 
-\begin{equation}
+\[
 \mathcal{L}_{\mathrm{physics}} =
 \frac{1}{N_r}\sum_{j=1}^{N_r} r_\theta(z_j,t_j)^2.
-\end{equation}
+\]
 
 Automatic differentiation provided both first and second derivatives exactly with respect to the computational graph, thereby avoiding manual discretization of the PDE residual. Optimization was performed with Adam for 5,000 epochs, starting from a learning rate of \(10^{-3}\) with stepwise decay. To contextualize the value of the physics prior, a degree-8 polynomial regression model trained only on the noisy sensor data was also evaluated as a non-physics baseline.
 
@@ -102,17 +102,25 @@ Automatic differentiation provided both first and second derivatives exactly wit
 
 ### 3.1 Convergence and inverse parameter discovery
 
-Training remained stable over 5,000 epochs. The data loss decreased from \(2.991719 \times 10^{-1}\) at epoch 1 to \(2.007347 \times 10^{-2}\) at epoch 5,000, while the physics loss settled at \(1.049197 \times 10^{-2}\). Figure 2 shows that the PDE residual drops sharply during the early stage of training, then stabilizes near \(10^{-2}\), indicating that the network learned a solution manifold consistent with the diffusion physics while still fitting the noisy observations. In parallel, the inferred \(c_v\) trajectory climbed steadily from its initialization at 0.5 and crossed the true benchmark near the final phase of optimization.
+The inverse PINN recovered \(c_v = 1.209335\), giving an absolute error of \(0.009335\) and a relative error of \(0.7779\%\) against the analytical truth \(c_{v,\mathrm{true}} = 1.2\). Training remained stable over 5,000 epochs: the data loss decreased from \(2.991719 \times 10^{-1}\) at epoch 1 to \(2.007347 \times 10^{-2}\) at epoch 5,000, while the physics loss settled at \(1.049197 \times 10^{-2}\). Figure 2 shows that the PDE residual drops sharply during the early stage of training, then stabilizes near \(10^{-2}\), indicating that the network learned a solution manifold consistent with the diffusion physics while still fitting the noisy observations. In parallel, the inferred \(c_v\) trajectory climbed steadily from its initialization at 0.5 and crossed the true benchmark near the final phase of optimization.
 
-The final discovered coefficient was
+For an inverse problem driven by only 50 noisy measurements, this level of accuracy is strong evidence that the embedded physics materially regularized the learning process. Table 1 summarizes the primary numerical results from the executed run.
 
-\begin{equation}
-c_v = 1.209335,
-\end{equation}
+![Figure 2. Training history for data loss, physics loss, and learned \(c_v\). The log-scale losses and true-value reference line show stable optimization and convergence toward \(c_{v,\mathrm{true}} = 1.2\).](figures/figure_2_convergence_and_cv.png)
 
-compared with the analytical truth \(c_v = 1.2\). This corresponds to an absolute error of \(0.009335\) and a relative error of \(0.7779\%\). For an inverse problem driven by only 50 noisy measurements, this level of accuracy is strong evidence that the embedded physics materially regularized the learning process.
+**Table 1. Summary of inverse-discovery and predictive performance.**
 
-![Figure 2. Joint training history showing logarithmic decay of the data and physics losses, together with the convergence of the learned coefficient of consolidation toward the analytical truth.](figures/figure_2_convergence_and_cv.png)
+| Metric | Value |
+|---|---:|
+| True \(c_v\) | 1.200000 |
+| Predicted \(c_v\) | 1.209335 |
+| Absolute error | 0.009335 |
+| Relative error | 0.7779% |
+| MSE | 0.008802 |
+| RMSE | 0.093818 |
+| MAE | 0.067871 |
+| 95% coverage | 94.67% |
+| Training time | 4 min 16.1 s |
 
 ### 3.2 Predictive accuracy versus a non-physics baseline
 
@@ -122,7 +130,7 @@ Figure 3 contrasts the analytical solution, the PINN mean prediction, and the de
 
 These results underline a key methodological point. A black-box regressor can exploit correlations in the noisy training data, but without a constitutive or PDE prior it lacks any mechanism to reject spurious shapes that violate consolidation physics. The PINN, in contrast, is not merely interpolating; it is performing constrained inference on a mechanically admissible function class.
 
-![Figure 3. Comparison of the analytical solution, the traditional polynomial regression baseline, and the uncertainty-aware PINN profile at \(T_v = 0.2\). The shaded band denotes the PINN 95% confidence interval obtained from 1,000 stochastic dropout passes.](figures/figure_3_true_vs_traditional_vs_pinn.png)
+![Figure 3. Depth profile at \(T_v = 0.2\) comparing the analytical solution, PINN mean, polynomial baseline, and PINN 95% confidence interval. The PINN remains close to the physics-based reference while the non-physics baseline departs outside well-constrained regions.](figures/figure_3_true_vs_traditional_vs_pinn.png)
 
 ### 3.3 Uncertainty structure and confidence calibration
 
@@ -130,7 +138,7 @@ The MC dropout machinery yielded a mean predictive standard deviation of \(0.085
 
 Figure 4 shows that predictive uncertainty is not spatially uniform. The lowest uncertainty appears in the broad interior region where the PDE prior and nearby observations jointly constrain the solution. Uncertainty rises toward poorly informed regions, especially close to the initial condition boundary and along edges of the domain where the network must infer behavior with less direct measurement support. This spatial pattern is precisely the kind of information decision-makers need when deciding whether existing instrumentation is sufficient or whether additional piezometers should be deployed.
 
-![Figure 4. Spatiotemporal uncertainty map from MC dropout. High uncertainty concentrates near weakly observed regions and around the early-time response, while the interior of the domain remains comparatively well constrained.](figures/figure_4_uncertainty_map.png)
+![Figure 4. MC-dropout predictive standard deviation over depth and time. The map identifies weakly constrained regions where additional observations would most improve confidence.](figures/figure_4_uncertainty_map.png)
 
 ### 3.4 Error localization and engineering interpretation
 
@@ -140,7 +148,7 @@ Taken together, Figures 4 and 5 show that the uncertainty-aware PINN is not mere
 
 From a computational standpoint, the recovered run completed on CPU with a training runtime of 4 min 16.1 s and a total end-to-end runtime of 6 min 18.8 s. This is significant for operational deployment: the framework is mesh-free, avoids repeated inverse FEM calibration loops, and remains computationally lightweight enough for iterative scenario updates.
 
-![Figure 5. Absolute error map of the PINN mean prediction relative to the analytical consolidation field. The highest discrepancies are concentrated near the sharp early-time front and the drainage boundaries.](figures/figure_5_error_map.png)
+![Figure 5. Absolute error of the PINN mean relative to the analytical field over the same domain as Figure 4. The map localizes discrepancies near early-time and boundary regions while confirming lower error across much of the interior.](figures/figure_5_error_map.png)
 
 ### 3.5 Scope and limitations
 

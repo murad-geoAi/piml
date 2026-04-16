@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from matplotlib.colors import LinearSegmentedColormap
 
 
 # ---------------------------------------------------------------------------
@@ -46,11 +45,22 @@ FIG_DPI = 300
 SLICE_TIME = 0.2
 REPORT_WIDTH = 98
 
-# Requested publication palette
-PRIMARY = "#d00000"
-SECONDARY = "#e9874e"
-ACCENT_1 = "#8fc067"
-ACCENT_2 = "#579d52"
+# Publication figure styling
+COLOR_ANALYTICAL = "#222222"
+COLOR_PINN = "#0072B2"
+COLOR_POLYNOMIAL = "#D55E00"
+COLOR_DATA_LOSS = COLOR_PINN
+COLOR_PHYSICS_LOSS = COLOR_POLYNOMIAL
+COLOR_CV = "#009E73"
+COLOR_REFERENCE = "#4D4D4D"
+COLOR_GRID = "#D9DEE3"
+CMAP_PRESSURE = "viridis"
+CMAP_UNCERTAINTY = "viridis"
+CMAP_ERROR = "magma"
+LINE_WIDTH = 2.2
+DOMINANT_LINE_WIDTH = 3.1
+MARKER_SIZE = 46
+MAP_FIGSIZE = (7.6, 5.4)
 
 FIG_DIR = Path(__file__).resolve().parent / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
@@ -58,20 +68,27 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 plt.style.use("seaborn-v0_8-whitegrid")
 plt.rcParams.update(
     {
-        "figure.figsize": (8, 6),
+        "figure.figsize": (8, 5.6),
         "figure.dpi": FIG_DPI,
         "savefig.dpi": FIG_DPI,
-        "font.family": "DejaVu Serif",
-        "font.size": 11,
-        "axes.titlesize": 13,
-        "axes.labelsize": 11,
+        "font.family": "DejaVu Sans",
+        "font.size": 10,
+        "mathtext.fontset": "dejavusans",
+        "axes.titlesize": 11,
+        "axes.labelsize": 10,
         "axes.linewidth": 0.8,
         "axes.edgecolor": "#333333",
-        "grid.color": "#d9d9d9",
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "legend.fontsize": 9,
+        "lines.linewidth": LINE_WIDTH,
+        "lines.markersize": 5,
+        "grid.color": COLOR_GRID,
         "grid.linewidth": 0.6,
-        "grid.alpha": 0.7,
+        "grid.alpha": 0.55,
         "legend.frameon": True,
-        "legend.framealpha": 0.9,
+        "legend.framealpha": 0.94,
+        "legend.edgecolor": "#C9CED3",
     }
 )
 
@@ -130,6 +147,18 @@ def format_runtime(seconds: float) -> str:
     if minutes < 1.0:
         return f"{secs:.2f} s"
     return f"{int(minutes)} min {secs:.1f} s"
+
+
+def apply_light_grid(ax: plt.Axes) -> None:
+    ax.grid(True, linestyle="--", linewidth=0.6, alpha=0.45)
+
+
+def format_domain_axis(ax: plt.Axes) -> None:
+    ax.set_xlabel("Time factor, $T_v$")
+    ax.set_ylabel("Depth, $z$ (m)")
+    ax.set_xlim(0.0, TV_MAX)
+    ax.set_ylim(H, 0.0)
+    ax.set_box_aspect(0.72)
 
 
 class ConsolidationPINN(nn.Module):
@@ -218,52 +247,41 @@ def save_figure_1(
     sensor_u_noisy: np.ndarray,
     sensor_u_clean: np.ndarray,
 ) -> Path:
-    colormap = LinearSegmentedColormap.from_list(
-        "apmce_palette", [PRIMARY, SECONDARY, ACCENT_1, ACCENT_2]
-    )
-
-    fig, ax = plt.subplots(figsize=(8.5, 6.5), constrained_layout=True)
-    bubble_sizes = 120 + 1000 * np.abs(sensor_u_noisy) / (np.max(np.abs(sensor_u_noisy)) + 1e-8)
+    fig, ax = plt.subplots(figsize=(7.6, 5.4), constrained_layout=True)
+    bubble_sizes = 34 + 230 * np.abs(sensor_u_noisy) / (np.max(np.abs(sensor_u_noisy)) + 1e-8)
     scatter = ax.scatter(
         sensor_t,
         sensor_z,
         c=sensor_u_noisy,
         s=bubble_sizes,
-        cmap=colormap,
+        cmap=CMAP_PRESSURE,
         edgecolors="white",
-        linewidths=0.9,
-        alpha=0.9,
-    )
-    ax.scatter(
-        sensor_t,
-        sensor_z,
-        s=24,
-        color=PRIMARY,
-        alpha=0.45,
-        linewidths=0.0,
+        linewidths=0.7,
+        alpha=0.88,
     )
 
-    ax.set_title("Sparse noisy sensor measurements across the consolidation domain")
+    ax.set_title("Sparse sensor map")
     ax.set_xlabel("Time factor, $T_v$")
     ax.set_ylabel("Depth, $z$ (m)")
     ax.set_xlim(0.0, TV_MAX)
-    ax.set_ylim(0.0, H)
-    ax.invert_yaxis()
-    ax.grid(True, linestyle="--", alpha=0.45)
+    ax.set_ylim(H, 0.0)
+    apply_light_grid(ax)
     mean_noise = np.mean(sensor_u_noisy - sensor_u_clean)
     std_noise = np.std(sensor_u_noisy - sensor_u_clean)
     ax.text(
         0.03,
-        0.06,
-        f"Bubble size proportional to |u|   |   Noise mean = {mean_noise:+.3f}, std = {std_noise:.3f}",
+        0.95,
+        f"Noise mean = {mean_noise:+.3f}; std = {std_noise:.3f}",
         transform=ax.transAxes,
+        ha="left",
+        va="top",
         fontsize=10,
         color="#333333",
-        bbox={"facecolor": "white", "edgecolor": "#cccccc", "alpha": 0.95, "boxstyle": "round,pad=0.35"},
+        bbox={"facecolor": "white", "edgecolor": "#C9CED3", "alpha": 0.94, "boxstyle": "round,pad=0.3"},
     )
 
-    cbar = fig.colorbar(scatter, ax=ax, shrink=0.94)
-    cbar.set_label("Noisy excess pore pressure, $u$")
+    cbar = fig.colorbar(scatter, ax=ax, shrink=0.96, pad=0.03)
+    cbar.set_label("Observed excess pore pressure, $u_i^{\\mathrm{noisy}}$")
 
     output_path = FIG_DIR / "figure_1_sparse_sensor_map.png"
     fig.savefig(output_path, bbox_inches="tight")
@@ -277,26 +295,58 @@ def save_figure_2(
     c_v_history: list[float],
 ) -> Path:
     epochs = np.arange(1, len(data_loss_history) + 1)
-    fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.2), constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(12.0, 4.9), constrained_layout=True)
 
-    axes[0].plot(epochs, data_loss_history, color=PRIMARY, linewidth=2.0, label="Data loss")
-    axes[0].plot(epochs, physics_loss_history, color=SECONDARY, linewidth=2.0, label="Physics loss")
+    axes[0].plot(epochs, data_loss_history, color=COLOR_DATA_LOSS, linewidth=LINE_WIDTH, label="Data loss")
+    axes[0].plot(
+        epochs,
+        physics_loss_history,
+        color=COLOR_PHYSICS_LOSS,
+        linewidth=LINE_WIDTH,
+        linestyle="--",
+        label="Physics loss",
+    )
     axes[0].set_yscale("log")
     axes[0].set_xlabel("Epoch")
     axes[0].set_ylabel("Loss")
-    axes[0].set_title("Loss convergence")
-    axes[0].legend()
-    axes[0].grid(True, which="both", linestyle="--", alpha=0.45)
+    axes[0].set_title("(a) Loss convergence")
+    axes[0].legend(loc="upper right")
+    axes[0].grid(True, which="both", linestyle="--", linewidth=0.6, alpha=0.45)
 
-    axes[1].plot(epochs, c_v_history, color=ACCENT_1, linewidth=2.2, label="Discovered $c_v$")
-    axes[1].axhline(CV_TRUE, color=ACCENT_2, linestyle="--", linewidth=2.2, label="True $c_v = 1.2$")
+    final_cv = c_v_history[-1]
+    axes[1].plot(epochs, c_v_history, color=COLOR_CV, linewidth=LINE_WIDTH, label="Learned $c_v$")
+    axes[1].axhline(
+        CV_TRUE,
+        color=COLOR_REFERENCE,
+        linestyle="--",
+        linewidth=1.7,
+        label="True $c_v = 1.2$",
+    )
+    axes[1].scatter(
+        [epochs[-1]],
+        [final_cv],
+        s=MARKER_SIZE,
+        color=COLOR_CV,
+        edgecolors="white",
+        linewidths=0.8,
+        zorder=4,
+        label=f"Final $c_v = {final_cv:.6f}$",
+    )
+    axes[1].annotate(
+        f"{final_cv:.6f}",
+        xy=(epochs[-1], final_cv),
+        xytext=(-68, 18),
+        textcoords="offset points",
+        fontsize=9,
+        arrowprops={"arrowstyle": "->", "color": COLOR_REFERENCE, "linewidth": 0.8},
+    )
     axes[1].set_xlabel("Epoch")
     axes[1].set_ylabel("Coefficient of consolidation, $c_v$")
-    axes[1].set_title("Inverse parameter discovery")
-    axes[1].legend()
-    axes[1].grid(True, linestyle="--", alpha=0.45)
+    axes[1].set_title("(b) Inverse parameter discovery")
+    axes[1].set_ylim(0.45, 1.28)
+    axes[1].legend(loc="lower right")
+    apply_light_grid(axes[1])
 
-    fig.suptitle("Training convergence and parameter identification", fontsize=14)
     output_path = FIG_DIR / "figure_2_convergence_and_cv.png"
     fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
@@ -311,34 +361,51 @@ def save_figure_3(
     pinn_lower_slice: np.ndarray,
     pinn_upper_slice: np.ndarray,
 ) -> Path:
-    fig, ax = plt.subplots(figsize=(8.5, 6.4), constrained_layout=True)
-    ax.plot(true_slice, z_slice, color=PRIMARY, linewidth=2.8, label="True analytical solution")
-    ax.plot(
-        poly_slice,
-        z_slice,
-        color=SECONDARY,
-        linewidth=2.2,
-        linestyle="--",
-        label="Traditional polynomial regression",
-    )
-    ax.plot(pinn_mean_slice, z_slice, color=ACCENT_1, linewidth=2.5, label="PINN mean prediction")
+    fig, ax = plt.subplots(figsize=(7.6, 5.4), constrained_layout=True)
     ax.fill_betweenx(
         z_slice,
         pinn_lower_slice,
         pinn_upper_slice,
-        color=ACCENT_2,
-        alpha=0.22,
-        label="95% confidence interval",
+        color=COLOR_PINN,
+        alpha=0.15,
+        linewidth=0.0,
+        label="PINN 95% confidence interval",
+    )
+    ax.plot(
+        true_slice,
+        z_slice,
+        color=COLOR_ANALYTICAL,
+        linewidth=DOMINANT_LINE_WIDTH,
+        linestyle="-",
+        label="Analytical",
+        zorder=4,
+    )
+    ax.plot(
+        pinn_mean_slice,
+        z_slice,
+        color=COLOR_PINN,
+        linewidth=LINE_WIDTH,
+        linestyle="--",
+        label="PINN",
+        zorder=3,
+    )
+    ax.plot(
+        poly_slice,
+        z_slice,
+        color=COLOR_POLYNOMIAL,
+        linewidth=LINE_WIDTH,
+        linestyle=":",
+        label="Polynomial",
+        zorder=2,
     )
 
-    ax.set_title(f"True, traditional, and PINN+UQ profiles at $T_v = {SLICE_TIME:.1f}$")
+    ax.set_title(f"Depth profile at $T_v = {SLICE_TIME:.1f}$")
     ax.set_xlabel("Excess pore pressure, $u$")
     ax.set_ylabel("Depth, $z$ (m)")
     ax.set_xlim(-0.15, 1.15)
-    ax.set_ylim(0.0, H)
-    ax.invert_yaxis()
+    ax.set_ylim(H, 0.0)
     ax.legend(loc="lower right")
-    ax.grid(True, linestyle="--", alpha=0.45)
+    apply_light_grid(ax)
 
     output_path = FIG_DIR / "figure_3_true_vs_traditional_vs_pinn.png"
     fig.savefig(output_path, bbox_inches="tight")
@@ -353,28 +420,53 @@ def save_figure_4(
     sensor_t: np.ndarray,
     sensor_z: np.ndarray,
 ) -> Path:
-    colormap = LinearSegmentedColormap.from_list(
-        "apmce_uncertainty", [PRIMARY, SECONDARY, ACCENT_1, ACCENT_2]
-    )
-    fig, ax = plt.subplots(figsize=(9.0, 6.3), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=MAP_FIGSIZE, constrained_layout=True)
 
-    levels = np.linspace(std_grid.min(), std_grid.max() + 1e-10, 18)
-    contour = ax.contourf(t_grid, z_grid, std_grid, levels=levels, cmap=colormap)
+    levels = np.linspace(0.0, std_grid.max() + 1e-10, 18)
+    contour = ax.contourf(t_grid, z_grid, std_grid, levels=levels, cmap=CMAP_UNCERTAINTY)
     ax.contour(t_grid, z_grid, std_grid, levels=levels[::2], colors="white", linewidths=0.4, alpha=0.55)
-    ax.scatter(sensor_t, sensor_z, s=14, color="white", edgecolors=PRIMARY, linewidths=0.4, alpha=0.95)
+    ax.scatter(
+        sensor_t,
+        sensor_z,
+        s=16,
+        color="white",
+        edgecolors=COLOR_ANALYTICAL,
+        linewidths=0.35,
+        alpha=0.9,
+    )
 
-    ax.set_title("Spatiotemporal uncertainty map from MC dropout")
-    ax.set_xlabel("Time factor, $T_v$")
-    ax.set_ylabel("Depth, $z$ (m)")
-    ax.set_xlim(0.0, TV_MAX)
-    ax.set_ylim(0.0, H)
-    ax.invert_yaxis()
+    ax.set_title("Predictive uncertainty")
+    format_domain_axis(ax)
     ax.grid(False)
 
-    cbar = fig.colorbar(contour, ax=ax, shrink=0.95)
+    cbar = fig.colorbar(contour, ax=ax, shrink=0.96, pad=0.03)
     cbar.set_label("Predictive standard deviation, $\\sigma_u$")
 
     output_path = FIG_DIR / "figure_4_uncertainty_map.png"
+    fig.savefig(output_path, bbox_inches="tight")
+    plt.close(fig)
+    return output_path
+
+
+def save_figure_5(
+    t_grid: np.ndarray,
+    z_grid: np.ndarray,
+    error_grid: np.ndarray,
+) -> Path:
+    fig, ax = plt.subplots(figsize=MAP_FIGSIZE, constrained_layout=True)
+
+    levels = np.linspace(0.0, error_grid.max() + 1e-10, 18)
+    contour = ax.contourf(t_grid, z_grid, error_grid, levels=levels, cmap=CMAP_ERROR)
+    ax.contour(t_grid, z_grid, error_grid, levels=levels[::2], colors="white", linewidths=0.4, alpha=0.5)
+
+    ax.set_title("Absolute prediction error")
+    format_domain_axis(ax)
+    ax.grid(False)
+
+    cbar = fig.colorbar(contour, ax=ax, shrink=0.96, pad=0.03)
+    cbar.set_label("Absolute error, $|\\hat{u}_{\\mathrm{mean}} - u|$")
+
+    output_path = FIG_DIR / "figure_5_error_map.png"
     fig.savefig(output_path, bbox_inches="tight")
     plt.close(fig)
     return output_path
@@ -479,6 +571,7 @@ def main() -> None:
     lower_grid = lower_flat.reshape(zz_eval.shape)
     upper_grid = upper_flat.reshape(zz_eval.shape)
     true_grid = analytical_consolidation_solution(zz_eval, tt_eval, c_v=CV_TRUE)
+    error_grid = np.abs(mean_grid - true_grid)
 
     z_slice = np.linspace(0.0, H, 300)
     t_slice = np.full_like(z_slice, SLICE_TIME)
@@ -506,6 +599,7 @@ def main() -> None:
         z_slice, true_slice, poly_slice, pinn_mean_slice, pinn_lower_slice, pinn_upper_slice
     )
     fig4_path = save_figure_4(tt_eval, zz_eval, std_grid, sensor_t, sensor_z)
+    fig5_path = save_figure_5(tt_eval, zz_eval, error_grid)
 
     final_c_v = float(model.c_v.detach().cpu().item())
     c_v_abs_error = abs(final_c_v - CV_TRUE)
@@ -514,7 +608,7 @@ def main() -> None:
     final_physics_loss = physics_loss_history[-1]
     dense_mse = float(np.mean((mean_grid - true_grid) ** 2))
     dense_rmse = float(np.sqrt(dense_mse))
-    dense_mae = float(np.mean(np.abs(mean_grid - true_grid)))
+    dense_mae = float(np.mean(error_grid))
     coverage_95 = float(np.mean((true_grid >= lower_grid) & (true_grid <= upper_grid)) * 100.0)
     average_uncertainty = float(np.mean(std_grid))
     max_uncertainty = float(np.max(std_grid))
@@ -703,6 +797,7 @@ def main() -> None:
     print(f"- Figure 2: {fig2_path}")
     print(f"- Figure 3: {fig3_path}")
     print(f"- Figure 4: {fig4_path}")
+    print(f"- Figure 5: {fig5_path}")
     print()
     print("Key run metrics")
     print(f"- Final discovered c_v: {final_c_v:.6f}")
