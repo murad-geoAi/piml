@@ -10,6 +10,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import torch
 import torch.nn as nn
@@ -45,18 +46,41 @@ FIG_DPI = 300
 SLICE_TIME = 0.2
 REPORT_WIDTH = 98
 
-# Publication figure styling
-COLOR_ANALYTICAL = "#222222"
-COLOR_PINN = "#0072B2"
-COLOR_POLYNOMIAL = "#D55E00"
-COLOR_DATA_LOSS = COLOR_PINN
-COLOR_PHYSICS_LOSS = COLOR_POLYNOMIAL
-COLOR_CV = "#009E73"
-COLOR_REFERENCE = "#4D4D4D"
-COLOR_GRID = "#D9DEE3"
-CMAP_PRESSURE = "viridis"
-CMAP_UNCERTAINTY = "viridis"
-CMAP_ERROR = "magma"
+# Publication figure styling: warm journal palette
+FIGURE_BG = "#F3EDE4"
+AXES_BG = "#F8F2EA"
+TEXT_DARK = "#2F2F2F"
+TEXT_MUTED = "#5E5B55"
+GRID_WARM = "#D8D0C4"
+RED = "#D50000"
+SALMON = "#DD5D61"
+ORANGE = "#F0A65D"
+YELLOW = "#F0C55B"
+GREEN = "#8FB85C"
+DARK_GREEN = "#5F9B61"
+REFERENCE_BLUE = "#6EA0D6"
+COLLOCATION_GRAY = "#BEB9B1"
+
+COLOR_ANALYTICAL = TEXT_DARK
+COLOR_PINN = RED
+COLOR_POLYNOMIAL = ORANGE
+COLOR_DATA_LOSS = SALMON
+COLOR_PHYSICS_LOSS = ORANGE
+COLOR_CV = GREEN
+COLOR_REFERENCE = REFERENCE_BLUE
+COLOR_GRID = GRID_WARM
+CMAP_PRESSURE = LinearSegmentedColormap.from_list(
+    "warm_pressure",
+    [DARK_GREEN, GREEN, YELLOW, ORANGE, SALMON, RED],
+)
+CMAP_UNCERTAINTY = LinearSegmentedColormap.from_list(
+    "warm_uncertainty",
+    [GREEN, YELLOW, ORANGE, SALMON, RED],
+)
+CMAP_ERROR = LinearSegmentedColormap.from_list(
+    "warm_error",
+    [GREEN, YELLOW, ORANGE, SALMON, RED],
+)
 LINE_WIDTH = 2.2
 DOMINANT_LINE_WIDTH = 3.1
 MARKER_SIZE = 46
@@ -71,15 +95,22 @@ plt.rcParams.update(
         "figure.figsize": (8, 5.6),
         "figure.dpi": FIG_DPI,
         "savefig.dpi": FIG_DPI,
+        "figure.facecolor": FIGURE_BG,
+        "axes.facecolor": AXES_BG,
+        "savefig.facecolor": FIGURE_BG,
         "font.family": "DejaVu Sans",
         "font.size": 10,
         "mathtext.fontset": "dejavusans",
         "axes.titlesize": 11,
         "axes.labelsize": 10,
         "axes.linewidth": 0.8,
-        "axes.edgecolor": "#333333",
+        "axes.edgecolor": TEXT_DARK,
+        "axes.labelcolor": TEXT_DARK,
+        "text.color": TEXT_DARK,
         "xtick.labelsize": 9,
         "ytick.labelsize": 9,
+        "xtick.color": TEXT_DARK,
+        "ytick.color": TEXT_DARK,
         "legend.fontsize": 9,
         "lines.linewidth": LINE_WIDTH,
         "lines.markersize": 5,
@@ -88,7 +119,8 @@ plt.rcParams.update(
         "grid.alpha": 0.55,
         "legend.frameon": True,
         "legend.framealpha": 0.94,
-        "legend.edgecolor": "#C9CED3",
+        "legend.edgecolor": "#C9BFAF",
+        "legend.facecolor": "#FBF6EF",
     }
 )
 

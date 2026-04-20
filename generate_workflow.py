@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 
@@ -10,18 +13,23 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 OUTPUT_PATH = FIG_DIR / "methodology_workflow.png"
 
-BACKGROUND = "#F7F7F4"
-TEXT_DARK = "#263238"
-TEXT_MUTED = "#52616B"
-EDGE = "#2F3A3D"
-BLUE = "#0072B2"
-GREEN = "#009E73"
-ORANGE = "#D55E00"
-TEAL = "#56B4E9"
-LIGHT_BLUE = "#E7F2FA"
-LIGHT_GREEN = "#EAF5EF"
-LIGHT_ORANGE = "#FFF0E7"
-LIGHT_TEAL = "#EAF7FB"
+BACKGROUND = "#F3EDE4"
+PANEL = "#FBF6EF"
+TEXT_DARK = "#2F2F2F"
+TEXT_MUTED = "#5E5B55"
+EDGE = "#2F2F2F"
+RED = "#D50000"
+SALMON = "#DD5D61"
+ORANGE = "#F0A65D"
+YELLOW = "#F0C55B"
+GREEN = "#8FB85C"
+DARK_GREEN = "#5F9B61"
+REFERENCE_BLUE = "#6EA0D6"
+LIGHT_RED = "#F8D6D1"
+LIGHT_ORANGE = "#FBE5C5"
+LIGHT_GREEN = "#E7EFCF"
+LIGHT_YELLOW = "#FAEFC7"
+LIGHT_BLUE = "#DCEAF7"
 
 plt.rcParams.update(
     {
@@ -29,6 +37,8 @@ plt.rcParams.update(
         "mathtext.fontset": "dejavusans",
         "font.size": 10,
         "axes.linewidth": 0.0,
+        "figure.facecolor": BACKGROUND,
+        "savefig.facecolor": BACKGROUND,
     }
 )
 
@@ -125,8 +135,8 @@ def add_stage_label(ax: plt.Axes, x: float, y: float, text: str, color: str) -> 
         color=color,
         bbox={
             "boxstyle": "round,pad=0.28,rounding_size=0.08",
-            "facecolor": "white",
-            "edgecolor": "#D0D7DE",
+            "facecolor": PANEL,
+            "edgecolor": "#C9BFAF",
             "linewidth": 0.8,
         },
     )
@@ -148,8 +158,8 @@ def main() -> None:
         1.52,
         "Training Data",
         "50 noisy measurements\n$(z, T_v, u_i^{noisy})$",
-        LIGHT_BLUE,
-        BLUE,
+        LIGHT_RED,
+        RED,
     )
     add_box(
         ax,
@@ -159,8 +169,8 @@ def main() -> None:
         1.52,
         "Physics Points",
         "2,000 collocation points\nTerzaghi PDE domain",
-        LIGHT_BLUE,
-        BLUE,
+        LIGHT_ORANGE,
+        ORANGE,
     )
     add_box(
         ax,
@@ -171,7 +181,7 @@ def main() -> None:
         "PINN Architecture",
         "Multilayer perceptron\n5 hidden layers x 50 neurons\nDropout, $p = 0.1$\nLearnable parameter: $c_v$",
         LIGHT_ORANGE,
-        ORANGE,
+        SALMON,
     )
     add_box(
         ax,
@@ -182,7 +192,7 @@ def main() -> None:
         "Optimization",
         "$L = L_{data} + L_{physics}$\nAutomatic differentiation\nAdam optimizer, 5,000 epochs",
         LIGHT_GREEN,
-        GREEN,
+        DARK_GREEN,
     )
     add_box(
         ax,
@@ -192,8 +202,8 @@ def main() -> None:
         1.94,
         "MC Dropout UQ",
         "1,000 stochastic passes\nPredictive distribution\nPointwise uncertainty",
-        LIGHT_TEAL,
-        TEAL,
+        LIGHT_BLUE,
+        REFERENCE_BLUE,
     )
     add_box(
         ax,
@@ -203,18 +213,18 @@ def main() -> None:
         1.94,
         "Final Outputs",
         "Recovered $c_v$\nPredictive mean $\\hat{u}$\n95% confidence bounds",
-        LIGHT_GREEN,
+        LIGHT_YELLOW,
         GREEN,
     )
 
-    add_stage_label(ax, 2.22, 7.16, "Inputs", BLUE)
-    add_stage_label(ax, 6.82, 7.16, "Inverse PINN Training", ORANGE)
+    add_stage_label(ax, 2.22, 7.16, "Inputs", RED)
+    add_stage_label(ax, 6.82, 7.16, "Inverse PINN Training", SALMON)
     add_stage_label(ax, 11.82, 7.16, "Prediction + UQ", GREEN)
 
-    add_arrow(ax, (3.82, 6.08), (4.68, 5.78), color=BLUE)
-    add_arrow(ax, (3.82, 3.98), (4.68, 5.04), color=BLUE, rad=-0.12)
+    add_arrow(ax, (3.82, 6.08), (4.68, 5.78), color=RED)
+    add_arrow(ax, (3.82, 3.98), (4.68, 5.04), color=ORANGE, rad=-0.12)
     add_arrow(ax, (6.82, 4.32), (6.82, 3.34), color=GREEN)
-    add_arrow(ax, (8.96, 5.55), (10.22, 5.55), color=TEAL)
+    add_arrow(ax, (8.96, 5.55), (10.22, 5.55), color=REFERENCE_BLUE)
     add_arrow(ax, (11.82, 4.6), (11.82, 3.58), color=GREEN)
     add_arrow(ax, (6.0, 3.32), (6.0, 4.32), color=GREEN, rad=-0.32)
 

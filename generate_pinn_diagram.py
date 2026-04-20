@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from pathlib import Path
@@ -7,25 +10,43 @@ from pathlib import Path
 FIG_DIR = Path(__file__).resolve().parent / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Colors matching the main script
-COLOR_PINN = "#0072B2"
-COLOR_PHYSICS = "#D55E00"
-COLOR_CV = "#009E73"
+# Warm journal palette matching the data figures
+FIGURE_BG = "#F3EDE4"
+PANEL = "#FBF6EF"
+TEXT_COLOR = "#2F2F2F"
+TEXT_MUTED = "#5E5B55"
+RED = "#D50000"
+SALMON = "#DD5D61"
+ORANGE = "#F0A65D"
+YELLOW = "#F0C55B"
+GREEN = "#8FB85C"
+DARK_GREEN = "#5F9B61"
+REFERENCE_BLUE = "#6EA0D6"
+COLOR_PINN = RED
+COLOR_PHYSICS = ORANGE
+COLOR_CV = GREEN
 COLOR_DATA = COLOR_PINN
-COLOR_BKG = "#F8F9FA"
-TEXT_COLOR = "#222222"
+COLOR_BKG = PANEL
+FACE_PINN = "#F8D6D1"
+FACE_PHYSICS = "#FBE5C5"
+FACE_CV = "#E7EFCF"
 
 plt.rcParams.update({
     "font.family": "DejaVu Sans",
     "mathtext.fontset": "dejavusans",
+    "figure.facecolor": FIGURE_BG,
+    "savefig.facecolor": FIGURE_BG,
+    "text.color": TEXT_COLOR,
 })
 
 fig, ax = plt.subplots(figsize=(12, 7.5), dpi=300)
+fig.patch.set_facecolor(FIGURE_BG)
+ax.set_facecolor(FIGURE_BG)
 ax.set_xlim(0, 12)
 ax.set_ylim(0, 7.5)
 ax.axis('off')
 
-def add_box(x, y, width, height, text, edgecolor=COLOR_PINN, facecolor="white", textcolor=TEXT_COLOR, fontsize=12, rx=0.1):
+def add_box(x, y, width, height, text, edgecolor=COLOR_PINN, facecolor=PANEL, textcolor=TEXT_COLOR, fontsize=12, rx=0.1):
     rect = patches.FancyBboxPatch((x, y), width, height,
                                   boxstyle=f"round,pad={rx}",
                                   edgecolor=edgecolor, facecolor=facecolor, linewidth=2.2, zorder=3)
@@ -62,7 +83,7 @@ p_scale = add_box(2.5, 5.0, 1.5, 1.2, "Scaling\n$[-1, 1]$", edgecolor=TEXT_COLOR
 # 3. Neural Network representation
 nn_x, nn_y = 4.8, 4.3
 nn_w, nn_h = 2.4, 2.6
-p_nn = add_box(nn_x, nn_y, nn_w, nn_h, "Neural Network\n\n5 Hidden Layers\n50 Units/Layer\nTanh Activation\nDropout ($p=0.1$)", edgecolor=COLOR_PINN, facecolor="#E6F1F8")
+p_nn = add_box(nn_x, nn_y, nn_w, nn_h, "Neural Network\n\n5 Hidden Layers\n50 Units/Layer\nTanh Activation\nDropout ($p=0.1$)", edgecolor=COLOR_PINN, facecolor=FACE_PINN)
 
 # Let's add some visual "nodes" to the NN box just for aesthetic
 for i, x_ratio in enumerate([0.15, 0.5, 0.85]):
@@ -79,20 +100,20 @@ ax.plot([nn_x+0.5*nn_w, nn_x+0.85*nn_w], [nn_y+0.8*nn_h, nn_y+0.7*nn_h], color=C
 p_output = add_box(8.0, 5.0, 1.6, 1.2, r"Predicted\nPore Pressure\n$\hat{u}(z, t)$", edgecolor=COLOR_PINN)
 
 # 5. Data Loss (Top branch)
-p_data_loss = add_box(10.2, 5.0, 1.5, 1.2, r"Data Loss\n$\mathcal{L}_{data}$", edgecolor=COLOR_PINN, facecolor="#E6F1F8")
+p_data_loss = add_box(10.2, 5.0, 1.5, 1.2, r"Data Loss\n$\mathcal{L}_{data}$", edgecolor=COLOR_PINN, facecolor=FACE_PINN)
 
 # 6. Automatic Differentiation (Bottom branch)
 p_autodiff = add_box(8.0, 2.5, 1.6, 1.2, "Automatic\nDifferentiation\n(Autograd)", edgecolor=COLOR_PHYSICS)
 
 # 7. Discovered Parameter cv
-p_cv = add_box(5.0, 2.5, 1.8, 1.2, r"Inverse Parameter\n$c_v$ (Learnable)", edgecolor=COLOR_CV, facecolor="#E6F9F2")
+p_cv = add_box(5.0, 2.5, 1.8, 1.2, r"Inverse Parameter\n$c_v$ (Learnable)", edgecolor=COLOR_CV, facecolor=FACE_CV)
 
 # 8. PDE Residual
-p_residual = add_box(8.0, 0.4, 1.6, 1.2, r"PDE Residual\n$\mathcal{F}_{PDE}$", edgecolor=COLOR_PHYSICS, facecolor="#FBEFE6")
+p_residual = add_box(8.0, 0.4, 1.6, 1.2, r"PDE Residual\n$\mathcal{F}_{PDE}$", edgecolor=COLOR_PHYSICS, facecolor=FACE_PHYSICS)
 ax.text(8.8, 0.2, r"$\mathcal{F}_{PDE} = \frac{\partial \hat{u}}{\partial t} - c_v \frac{\partial^2 \hat{u}}{\partial z^2}$", ha='center', va='center', fontsize=11, color=COLOR_PHYSICS)
 
 # 9. Physics Loss
-p_physics_loss = add_box(10.2, 0.4, 1.5, 1.2, r"Physics Loss\n$\mathcal{L}_{PDE}$", edgecolor=COLOR_PHYSICS, facecolor="#FBEFE6")
+p_physics_loss = add_box(10.2, 0.4, 1.5, 1.2, r"Physics Loss\n$\mathcal{L}_{PDE}$", edgecolor=COLOR_PHYSICS, facecolor=FACE_PHYSICS)
 
 # 10. Total Loss
 p_total = add_box(10.2, 2.8, 1.5, 1.2, r"Total Loss\n$\mathcal{L} = \mathcal{L}_{data} + \mathcal{L}_{PDE}$", edgecolor=TEXT_COLOR, facecolor=COLOR_BKG, fontsize=11)
@@ -145,9 +166,8 @@ ax.text(5.5, 6.3, "Update Weights\n& Biases", ha='right', va='center', fontsize=
 ax.text(5.5, 3.8, "Update $c_v$", ha='right', va='center', fontsize=9, color=COLOR_CV)
 
 output_path = FIG_DIR / "figure_6_pinn_architecture.png"
-plt.savefig(output_path, bbox_inches='tight')
+plt.savefig(output_path, bbox_inches='tight', facecolor=fig.get_facecolor())
 print(f"Successfully generated PINN Architecture Diagram at {output_path}")
 
-plt.savefig(FIG_DIR / "figure_6_pinn_architecture.pdf", bbox_inches='tight')
+plt.savefig(FIG_DIR / "figure_6_pinn_architecture.pdf", bbox_inches='tight', facecolor=fig.get_facecolor())
 print(f"Successfully generated PDF version at {FIG_DIR / 'figure_6_pinn_architecture.pdf'}")
-
