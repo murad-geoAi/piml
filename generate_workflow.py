@@ -1,99 +1,262 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from __future__ import annotations
+
 from pathlib import Path
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 
-# Set up figure
-fig, ax = plt.subplots(figsize=(11, 7.5), dpi=300)
-ax.set_xlim(0, 100)
-ax.set_ylim(0, 100)
-ax.axis("off")
-fig.patch.set_facecolor("#faf0e6")  # Light linen background from image
 
-# Colors from extracted palette
-PRIMARY = "#d00000"
-SECONDARY = "#e9874e"
-ACCENT_1 = "#8fc067"
-ACCENT_2 = "#579d52"
-TEXT_DL = "#ffffff"
+FIG_DIR = Path(__file__).resolve().parent / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
 
-def draw_box(x, y, w, h, title, subtitle, facecolor, edgecolor="#333333"):
-    # Box
+OUTPUT_PATH = FIG_DIR / "methodology_workflow.png"
+
+BACKGROUND = "#F7F7F4"
+TEXT_DARK = "#263238"
+TEXT_MUTED = "#52616B"
+EDGE = "#2F3A3D"
+BLUE = "#0072B2"
+GREEN = "#009E73"
+ORANGE = "#D55E00"
+TEAL = "#56B4E9"
+LIGHT_BLUE = "#E7F2FA"
+LIGHT_GREEN = "#EAF5EF"
+LIGHT_ORANGE = "#FFF0E7"
+LIGHT_TEAL = "#EAF7FB"
+
+plt.rcParams.update(
+    {
+        "font.family": "DejaVu Sans",
+        "mathtext.fontset": "dejavusans",
+        "font.size": 10,
+        "axes.linewidth": 0.0,
+    }
+)
+
+
+def add_box(
+    ax: plt.Axes,
+    x: float,
+    y: float,
+    w: float,
+    h: float,
+    title: str,
+    body: str,
+    face: str,
+    accent: str,
+    title_size: int = 13,
+) -> None:
     box = patches.FancyBboxPatch(
-        (x, y), w, h, boxstyle="round,pad=1.5", 
-        linewidth=2.0, edgecolor=edgecolor, facecolor=facecolor,
-        alpha=0.9
+        (x, y),
+        w,
+        h,
+        boxstyle="round,pad=0.04,rounding_size=0.14",
+        linewidth=1.4,
+        edgecolor=EDGE,
+        facecolor=face,
     )
     ax.add_patch(box)
-    
-    # Title text
-    ax.text(x + w/2, y + h - 5.5, title, ha="center", va="center", 
-            fontsize=13, fontweight="bold", color=TEXT_DL, family="serif")
-    
-    # Subtitle text
-    ax.text(x + w/2, y + h/2 - 2, subtitle, ha="center", va="center", 
-            fontsize=10, color=TEXT_DL, linespacing=1.5, family="serif")
 
-def draw_arrow(x1, y1, x2, y2, label=None, label_pt=None):
-    ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                arrowprops=dict(arrowstyle="-|>,head_length=0.8,head_width=0.4", 
-                                color="#444444", lw=2.5, shrinkA=0, shrinkB=0))
-    if label and label_pt:
-        ax.text(label_pt[0], label_pt[1], label, ha="center", va="center", 
-                fontsize=10, fontweight="bold", color="#333333",
-                bbox=dict(boxstyle="round,pad=0.3", fc="#faf0e6", ec="none", alpha=0.9))
+    ax.add_patch(
+        patches.Rectangle(
+            (x, y + h - 0.16),
+            w,
+            0.16,
+            linewidth=0,
+            facecolor=accent,
+            alpha=0.95,
+        )
+    )
 
-# Draw the blocks
-# 1. Inputs (Left)
-# 1a: Training Data
-draw_box(5, 65, 23, 18, "Training Data", 
-         "50 Sparse & Noisy\nSensor Measurements\n$(z, t, u_{noisy})$", PRIMARY)
+    ax.text(
+        x + 0.28,
+        y + h - 0.46,
+        title,
+        ha="left",
+        va="top",
+        fontsize=title_size,
+        fontweight="bold",
+        color=TEXT_DARK,
+    )
+    ax.text(
+        x + 0.28,
+        y + h - 0.98,
+        body,
+        ha="left",
+        va="top",
+        fontsize=9.4,
+        color=TEXT_MUTED,
+        linespacing=1.22,
+    )
 
-# 1b: Collocation Points
-draw_box(5, 35, 23, 18, "Physics Constraints", 
-         "2,000 Interior\nCollocation Points\nTerzaghi PDE Domain", PRIMARY)
 
-# 2. Network (Center Top)
-draw_box(38, 50, 24, 30, "PINN Architecture", 
-         "Multilayer Perceptron\n5 Layers $\\times$ 50 Neurons\n\n+ Dropout ($p=0.1$)\n\nLearnable Parameter: $c_v$", SECONDARY)
+def add_arrow(
+    ax: plt.Axes,
+    start: tuple[float, float],
+    end: tuple[float, float],
+    *,
+    rad: float = 0.0,
+    color: str = TEXT_DARK,
+) -> None:
+    ax.annotate(
+        "",
+        xy=end,
+        xytext=start,
+        arrowprops={
+            "arrowstyle": "-|>",
+            "mutation_scale": 18,
+            "lw": 1.9,
+            "color": color,
+            "shrinkA": 5,
+            "shrinkB": 5,
+            "connectionstyle": f"arc3,rad={rad}",
+        },
+    )
 
-# 3. Loss & Optimizer (Center Bottom)
-draw_box(38, 10, 24, 25, "Optimization", 
-         "Loss = MSE$_{data}$ + MSE$_{PDE}$\n\nAdam Optimizer\n5,000 Epochs\nAutomatic Differentiation", ACCENT_1)
 
-# 4. Uncertainty Quantification (Right Top)
-draw_box(71, 58, 24, 22, "Uncertainty\nQuantification", 
-         "Monte Carlo Dropout\n1,000 Stochastic Passes\nat Inference Time", ACCENT_2)
+def add_stage_label(ax: plt.Axes, x: float, y: float, text: str, color: str) -> None:
+    ax.text(
+        x,
+        y,
+        text,
+        ha="center",
+        va="center",
+        fontsize=9,
+        fontweight="bold",
+        color=color,
+        bbox={
+            "boxstyle": "round,pad=0.28,rounding_size=0.08",
+            "facecolor": "white",
+            "edgecolor": "#D0D7DE",
+            "linewidth": 0.8,
+        },
+    )
 
-# 5. Predictions (Right Bottom)
-draw_box(71, 23, 24, 22, "Final Outputs", 
-         "Robust Discovery of $c_v$\n\nPredictive Mean $\\hat{u}$\n95% Confidence Bounds", ACCENT_2)
 
-# Connect Inputs to Network
-draw_arrow(28, 74, 34, 74)         # Data to Network
-draw_arrow(34, 74, 34, 65)         # Data path down
-draw_arrow(34, 65, 38, 65, "Forward\nPass", (34, 70))
+def main() -> None:
+    fig, ax = plt.subplots(figsize=(12.8, 7.2), dpi=300)
+    fig.patch.set_facecolor(BACKGROUND)
+    ax.set_facecolor(BACKGROUND)
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 8.6)
+    ax.axis("off")
 
-draw_arrow(28, 44, 34, 44)         # Physics to Network
-draw_arrow(34, 44, 34, 65)         # Physics path up
+    add_box(
+        ax,
+        0.65,
+        5.32,
+        3.15,
+        1.52,
+        "Training Data",
+        "50 noisy measurements\n$(z, T_v, u_i^{noisy})$",
+        LIGHT_BLUE,
+        BLUE,
+    )
+    add_box(
+        ax,
+        0.65,
+        3.22,
+        3.15,
+        1.52,
+        "Physics Points",
+        "2,000 collocation points\nTerzaghi PDE domain",
+        LIGHT_BLUE,
+        BLUE,
+    )
+    add_box(
+        ax,
+        4.7,
+        4.34,
+        4.25,
+        2.42,
+        "PINN Architecture",
+        "Multilayer perceptron\n5 hidden layers x 50 neurons\nDropout, $p = 0.1$\nLearnable parameter: $c_v$",
+        LIGHT_ORANGE,
+        ORANGE,
+    )
+    add_box(
+        ax,
+        4.7,
+        1.15,
+        4.25,
+        2.15,
+        "Optimization",
+        "$L = L_{data} + L_{physics}$\nAutomatic differentiation\nAdam optimizer, 5,000 epochs",
+        LIGHT_GREEN,
+        GREEN,
+    )
+    add_box(
+        ax,
+        10.25,
+        4.62,
+        3.15,
+        1.94,
+        "MC Dropout UQ",
+        "1,000 stochastic passes\nPredictive distribution\nPointwise uncertainty",
+        LIGHT_TEAL,
+        TEAL,
+    )
+    add_box(
+        ax,
+        10.25,
+        1.62,
+        3.15,
+        1.94,
+        "Final Outputs",
+        "Recovered $c_v$\nPredictive mean $\\hat{u}$\n95% confidence bounds",
+        LIGHT_GREEN,
+        GREEN,
+    )
 
-# Connect Network to Loss
-draw_arrow(50, 50, 50, 35, "Compute\nResiduals", (50, 42.5))
+    add_stage_label(ax, 2.22, 7.16, "Inputs", BLUE)
+    add_stage_label(ax, 6.82, 7.16, "Inverse PINN Training", ORANGE)
+    add_stage_label(ax, 11.82, 7.16, "Prediction + UQ", GREEN)
 
-# Feedback loop: Loss back to Network
-draw_arrow(43, 35, 43, 50, "Update Weights\n& $c_v$", (43, 42.5))
+    add_arrow(ax, (3.82, 6.08), (4.68, 5.78), color=BLUE)
+    add_arrow(ax, (3.82, 3.98), (4.68, 5.04), color=BLUE, rad=-0.12)
+    add_arrow(ax, (6.82, 4.32), (6.82, 3.34), color=GREEN)
+    add_arrow(ax, (8.96, 5.55), (10.22, 5.55), color=TEAL)
+    add_arrow(ax, (11.82, 4.6), (11.82, 3.58), color=GREEN)
+    add_arrow(ax, (6.0, 3.32), (6.0, 4.32), color=GREEN, rad=-0.32)
 
-# Connect Network to UQ
-draw_arrow(62, 65, 71, 65, "", None)
+    ax.text(
+        5.05,
+        3.82,
+        "update weights and $c_v$",
+        ha="left",
+        va="center",
+        fontsize=8.8,
+        color=TEXT_MUTED,
+        bbox={
+            "boxstyle": "round,pad=0.22,rounding_size=0.06",
+            "facecolor": BACKGROUND,
+            "edgecolor": "none",
+            "alpha": 0.96,
+        },
+    )
+    ax.text(
+        9.55,
+        5.9,
+        "inference",
+        ha="center",
+        va="bottom",
+        fontsize=8.8,
+        color=TEXT_MUTED,
+    )
+    ax.text(
+        12.16,
+        4.08,
+        "aggregate",
+        ha="left",
+        va="center",
+        fontsize=8.8,
+        color=TEXT_MUTED,
+    )
 
-# Connect UQ to Outputs
-draw_arrow(83, 58, 83, 45, "Aggregate", (83, 51.5))
 
-# Add an overarching title
-ax.text(50, 92, "Methodology Workflow: Uncertainty-Aware PINN for Inverse Consolidation", 
-        ha="center", va="center", fontsize=16, fontweight="bold", family="serif", color="#222222")
+    fig.savefig(OUTPUT_PATH, bbox_inches="tight", facecolor=fig.get_facecolor())
+    plt.close(fig)
+    print(f"Methodological workflow figure successfully generated at {OUTPUT_PATH}")
 
-# Save figure
-output_path = Path(__file__).resolve().parent / "figures" / "methodology_workflow.png"
-output_path.parent.mkdir(parents=True, exist_ok=True)
-plt.savefig(output_path, bbox_inches="tight")
-print(f"Methodological workflow figure successfully generated at {output_path}")
+
+if __name__ == "__main__":
+    main()

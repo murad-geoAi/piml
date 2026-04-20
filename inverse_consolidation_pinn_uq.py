@@ -266,19 +266,6 @@ def save_figure_1(
     ax.set_xlim(0.0, TV_MAX)
     ax.set_ylim(H, 0.0)
     apply_light_grid(ax)
-    mean_noise = np.mean(sensor_u_noisy - sensor_u_clean)
-    std_noise = np.std(sensor_u_noisy - sensor_u_clean)
-    ax.text(
-        0.03,
-        0.95,
-        f"Noise mean = {mean_noise:+.3f}; std = {std_noise:.3f}",
-        transform=ax.transAxes,
-        ha="left",
-        va="top",
-        fontsize=10,
-        color="#333333",
-        bbox={"facecolor": "white", "edgecolor": "#C9CED3", "alpha": 0.94, "boxstyle": "round,pad=0.3"},
-    )
 
     cbar = fig.colorbar(scatter, ax=ax, shrink=0.96, pad=0.03)
     cbar.set_label("Observed excess pore pressure, $u_i^{\\mathrm{noisy}}$")
