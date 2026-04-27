@@ -25,18 +25,18 @@ NOISE_STD = 0.05
 BETA_A = 1.2
 BETA_B = 3.0
 
-FIGURE_BG = "#F3EDE4"
-AXES_BG = "#F8F2EA"
-DARK_TEXT = "#2F2F2F"
-GRID_WARM = "#D8D0C4"
+FIGURE_BG = "#FFFFFF"
+AXES_BG = "#FFFFFF"
+DARK_TEXT = "#000000"
+GRID_WARM = "#E0E0E0"
 RED = "#D50000"
 SALMON = "#DD5D61"
 ORANGE = "#F0A65D"
 YELLOW = "#F0C55B"
 GREEN = "#8FB85C"
 DARK_GREEN = "#5F9B61"
-REFERENCE_BLUE = "#6EA0D6"
-COLLOCATION_GRAY = "#BEB9B1"
+REFERENCE_BLUE = "#3366CC"  # Darkened for higher contrast
+COLLOCATION_GRAY = "#008080" # Changed to Teal for distinction
 
 COLOR_COLLOCATION = COLLOCATION_GRAY
 COLOR_TIME = SALMON
@@ -76,8 +76,8 @@ plt.rcParams.update(
         "grid.alpha": 0.55,
         "legend.frameon": True,
         "legend.framealpha": 0.94,
-        "legend.edgecolor": "#C9BFAF",
-        "legend.facecolor": "#FBF6EF",
+        "legend.edgecolor": "#CCCCCC",
+        "legend.facecolor": "#FFFFFF",
     }
 )
 
@@ -115,7 +115,7 @@ def main() -> None:
         collocation_z,
         s=7,
         color=COLOR_COLLOCATION,
-        alpha=0.28,
+        alpha=0.45,
         linewidths=0,
         rasterized=True,
         label="Representative PDE collocation sample",
@@ -150,8 +150,8 @@ def main() -> None:
         color=COLOR_REFERENCE,
         bbox={
             "boxstyle": "round,pad=0.28,rounding_size=0.05",
-            "facecolor": "#FBF6EF",
-            "edgecolor": "#D0D7DE",
+            "facecolor": "#FFFFFF",
+            "edgecolor": "#CCCCCC",
             "linewidth": 0.8,
             "alpha": 0.94,
         },
@@ -270,7 +270,7 @@ def main() -> None:
         ha="center",
         va="bottom",
         fontsize=8.8,
-        color="#52616B",
+        color="#000000",
     )
 
     output_path_png = FIG_DIR / "figure_data_distribution.png"
