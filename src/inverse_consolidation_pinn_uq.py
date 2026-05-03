@@ -780,7 +780,25 @@ STYLES = """
 .form-sec {
   font-size: .72rem; letter-spacing: .10em;
   text-transform: uppercase; color: var(--cyan);
-  margin: 1rem 0 .3rem;
+  margin: 1rem 0 .6rem;
+}
+
+/* ── sidebar expander fix ──────────────────── */
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+  margin-top: .4rem;
+  position: relative;
+  z-index: 1;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary {
+  font-size: .82rem !important;
+  padding: .5rem .6rem !important;
+  background: var(--bg-raised) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  color: var(--text-hi) !important;
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+  padding-top: .5rem;
 }
 
 /* ── tabs ───────────────────────────────────── */
