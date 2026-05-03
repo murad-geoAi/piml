@@ -923,12 +923,11 @@ def run_streamlit_app() -> None:
 
             st.markdown('<div class="form-sec">── Architecture</div>',
                         unsafe_allow_html=True)
-            with st.expander("Network details", expanded=False):
-                act   = st.selectbox("Activation", ["Tanh", "SiLU", "ReLU"], index=0)
-                h_lay = st.number_input("Hidden layers", 2, 8, int(defs["hidden_layers"]), 1)
-                h_uni = st.number_input("Units / layer", 16, 128, int(defs["hidden_units"]), 8)
-                lr    = st.selectbox("Learning rate", [1e-3, 7e-4, 5e-4, 1e-4], index=0)
-                slc   = st.slider("Profile slice T_v", 0.05, 0.95, 0.20, 0.05)
+            act   = st.selectbox("Activation", ["Tanh", "SiLU", "ReLU"], index=0)
+            h_lay = st.number_input("Hidden layers", 2, 8, int(defs["hidden_layers"]), 1)
+            h_uni = st.number_input("Units / layer", 16, 128, int(defs["hidden_units"]), 8)
+            lr    = st.selectbox("Learning rate", [1e-3, 7e-4, 5e-4, 1e-4], index=0)
+            slc   = st.slider("Profile slice T_v", 0.05, 0.95, 0.20, 0.05)
 
             run_clicked = st.form_submit_button(
                 "▶  Run analysis", use_container_width=True, type="primary"
