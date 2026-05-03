@@ -1,0 +1,5 @@
+streamlit
+matplotlib
+numpy
+torch --index-url https://download.pytorch.org/whl/cpu
+pandas
